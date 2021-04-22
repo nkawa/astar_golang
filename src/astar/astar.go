@@ -31,10 +31,18 @@ type Point struct {
 
 func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
 	a := new(Astar)
-	a.MaxX = int(math.Round(tool.MaxFloat(objects[:][0])))
-	a.MaxY = int(math.Round(tool.MaxFloat(objects[:][1])))
-	a.MinX = int(math.Round(tool.MinFloat(objects[:][0])))
-	a.MinY = int(math.Round(tool.MinFloat(objects[:][1])))
+	a.Resolution = resolution
+	var xList []float64
+	var yList []float64
+
+	for _, obj := range objects {
+		xList = append(xList, obj[0])
+		yList = append(yList, obj[1])
+	}
+	a.MaxX = int(math.Round(tool.MaxFloat(xList)))
+	a.MaxY = int(math.Round(tool.MaxFloat(yList)))
+	a.MinX = int(math.Round(tool.MinFloat(xList)))
+	a.MinY = int(math.Round(tool.MinFloat(yList)))
 
 	a.XWidth = int(math.Round(float64(a.MaxX)-float64(a.MinX)) / resolution)
 	a.YWidth = int(math.Round(float64(a.MaxY)-float64(a.MinY)) / resolution)
@@ -51,7 +59,7 @@ func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
 			x := indToPos(ix, a.MinX, resolution)
 			ind = iy*a.XWidth + ix
 			for i := 0; i < len(objects); i++ {
-				d := math.Hypot(objects[i][0]-float64(x), objects[i][1]-float64(y))
+				d := math.Hypot(objects[i][0]-x, objects[i][1]-y)
 				if d <= objectRadius {
 					a.ObjMap[ix][iy] = true
 					break
@@ -90,8 +98,8 @@ func indToPos(index, minP int, reso float64) float64 {
 }
 
 func (a Astar) indToPosXY(index int) (float64, float64) {
-	px := float64(a.MinX) + float64(math.Round(float64(index%a.XWidth)))*a.Resolution
-	py := float64(a.MinY) + float64(math.Round(float64(index/a.XWidth)))*a.Resolution
+	px := float64(a.MinX) + float64(index%a.XWidth)*a.Resolution
+	py := float64(a.MinY) + float64(index/a.XWidth)*a.Resolution
 	return px, py
 }
 
@@ -113,7 +121,6 @@ func heuristic(n1, n2 *AstarNode) float64 {
 
 func (a Astar) verifyGrid(index int) bool {
 	if index > a.MaxIndex {
-		// log.Print("index ", index, " is overflow")
 		return false
 	}
 	px, py := a.indToPosXY(index)
@@ -136,7 +143,8 @@ func (a Astar) verifyGrid(index int) bool {
 }
 
 func (a Astar) nodeToInd(n *AstarNode) int {
-	return n.Iy*a.XWidth + n.Ix
+	index := n.Iy*a.XWidth + n.Ix
+	return index
 }
 
 func (a Astar) indToPos(index, minP int) float64 {
@@ -145,7 +153,7 @@ func (a Astar) indToPos(index, minP int) float64 {
 }
 
 // Astar planing (sx,sy) is start, (gx,gy) is goal point
-func (a *Astar) Plan(sx, sy, gx, gy float64) (route [2][]float64, err error) {
+func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 	nstart := newNode(posToInd(sx, a.MinX, a.Resolution), posToInd(sy, a.MinY, a.Resolution), 0.0, -1)
 	ngoal := newNode(posToInd(gx, a.MinX, a.Resolution), posToInd(gy, a.MinY, a.Resolution), 0.0, -1)
 
@@ -215,7 +223,7 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [2][]float64, err error) {
 }
 
 // 最後に経路の順番にする
-func (a Astar) finalPath(ngoal *AstarNode, closeSet map[int]*AstarNode) (route [2][]float64) {
+func (a Astar) finalPath(ngoal *AstarNode, closeSet map[int]*AstarNode) (route [][2]float64) {
 	route = append(route, [2]float64{a.indToPos(ngoal.Ix, a.MinX), a.indToPos(ngoal.Iy, a.MinY)})
 
 	pind := ngoal.PrevIndex
