@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/fukurin00/astar_golang/src/tool"
+	"github.com/fukurin00/astar_golang/tool"
 )
 
 //Astar planning class

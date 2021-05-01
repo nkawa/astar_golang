@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	astar "github.com/fukurin00/astar_golang/src/astar"
+	astar "github.com/fukurin00/astar_golang"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	route, err := aStar.Plan(-1, -1, 2, 1)
 	if err != nil {
 		fmt.Print(err)
-	}else{
+	} else {
 		fmt.Print(route)
 	}
 }
