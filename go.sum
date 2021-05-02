@@ -1,0 +1,7 @@
+github.com/Arafatk/glot v0.0.0-20180312013246-79d5219000f0 h1:buG0FAUZtOwl9c+RdnQo3cfZhTnY2OY24J3t+jpeb9Y=
+github.com/Arafatk/glot v0.0.0-20180312013246-79d5219000f0/go.mod h1:o0O8gFiTfVp4g5QcQJ1iMLw6ROiy9BITaiBbEiwz9h8=
+github.com/jbuchbinder/gopnm v0.0.0-20150223212718-5176c556b9ce h1:SHuC5z27u3lD7x5aybCGdCMN9U01n1+bsaTGfJUPvlc=
+github.com/jbuchbinder/gopnm v0.0.0-20150223212718-5176c556b9ce/go.mod h1:k4IRLYBcpoQAIqDzFcBFY3eSoVnCvN5nfq3Wqm0ZLp8=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
+gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
