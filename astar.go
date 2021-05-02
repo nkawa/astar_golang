@@ -1,7 +1,7 @@
 package astar
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"math"
 
@@ -158,11 +158,11 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 	ngoal := newNode(posToInd(gx, a.MinX, a.Resolution), posToInd(gy, a.MinY, a.Resolution), 0.0, -1)
 
 	if !a.verifyGrid(a.nodeToInd(nstart)) {
-		err = errors.New("start point is not verified")
+		err = fmt.Errorf("start point (%f, %f) is not verified", sx, sy)
 		return route, err
 	}
 	if !a.verifyGrid(a.nodeToInd(ngoal)) {
-		err = errors.New("goal point is not verified")
+		err = fmt.Errorf("goal point (%f, %f) is not verified", gx, gy)
 		return route, err
 	}
 
@@ -172,7 +172,7 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 
 	for {
 		if len(open_set) == 0 {
-			err = errors.New("open set is empty..")
+			err = fmt.Errorf("failer point (%f,%f) to (%f, %f): open set is empty", sx, sy, gx, gy)
 			return route, err
 		}
 
