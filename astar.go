@@ -2,7 +2,6 @@ package astar
 
 import (
 	"fmt"
-	"log"
 	"math"
 
 	"github.com/fukurin00/astar_golang/tool"
@@ -172,11 +171,11 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 
 	for {
 		if len(open_set) == 0 {
-			err = fmt.Errorf("failer point (%f,%f) to (%f, %f): open set is empty", sx, sy, gx, gy)
+			err = fmt.Errorf("fail searching point from (%f,%f) to (%f, %f): open set is empty", sx, sy, gx, gy)
 			return route, err
 		}
 
-		minCost := 9999999.9
+		minCost := 1e19
 		minKey := -1
 		for key, val := range open_set {
 			calCost := val.Cost + heuristic(ngoal, val)
@@ -189,7 +188,7 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 		current := open_set[cId]
 
 		if current.Ix == ngoal.Ix && current.Iy == ngoal.Iy {
-			log.Print("find goal")
+			//log.Print("find goal")
 			ngoal.PrevIndex = current.PrevIndex
 			ngoal.Cost = current.Cost
 			route = a.finalPath(ngoal, close_set)
