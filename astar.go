@@ -58,34 +58,51 @@ func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
 
 	a.ObjMap = make([][]bool, a.XWidth+1)
 	for i := 0; i <= a.XWidth; i++ {
-		a.ObjMap[i] = make([]bool, a.YWidth)
+		a.ObjMap[i] = make([]bool, a.YWidth+1)
 	}
-
-	var ind int
+	//
+	//	var ind int
 	// too slow greedy loop fukurin!
 
-	for iy := 0; iy < a.YWidth; iy++ {
-		y := indToPos(iy, a.MinY, resolution)
-		for ix := 1; ix < a.XWidth; ix++ {
-			x := indToPos(ix, a.MinX, resolution)
-			ind = iy*a.XWidth + ix
-			for i := 0; i < len(objects); i++ {
-				d := math.Hypot(objects[i][0]-x, objects[i][1]-y)
-				if d <= objectRadius {
-					a.ObjMap[ix][iy] = true
-					break
+	/*	for iy := 0; iy < a.YWidth; iy++ {
+				y := indToPos(iy, a.MinY, resolution)
+				for ix := 1; ix < a.XWidth; ix++ {
+					x := indToPos(ix, a.MinX, resolution)
+					ind = iy*a.XWidth + ix
+					for i := 0; i < len(objects); i++ {
+						d := math.Hypot(objects[i][0]-x, objects[i][1]-y)
+						if d <= objectRadius {
+							a.ObjMap[ix][iy] = true
+							break
+						}
+					}
+				}
+			}
+		count := 0
+		for _, ol := range a.ObjMap {
+			for _, o := range ol {
+				if o {
+					count += 1
 				}
 			}
 		}
-	}
-	/*
-		for _, o := range objects {
-			ix := indToPos(int(o[0]), a.MinX, resolution)
-			iy := indToPos(int(o[1]), a.MinY, resolution)
-			a.ObjMap[int(ix)][int(iy)] = true
-		}*/
+		fmt.Printf("obj count %d", count)
 
-	a.MaxIndex = ind
+		for i := 0; i <= a.XWidth; i++ {
+			a.ObjMap[i] = make([]bool, a.YWidth+1)
+		}
+	*/
+
+	count := 0
+	for _, o := range objects {
+		ix := posToInd(o[0], a.MinX, resolution)
+		iy := posToInd(o[1], a.MinY, resolution)
+		a.ObjMap[int(ix)][int(iy)] = true
+		count += 1
+
+	}
+	fmt.Printf("obj count %d", count)
+	a.MaxIndex = a.YWidth*a.XWidth - 1
 	return a
 }
 
@@ -231,7 +248,7 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 		close_set[cId] = current
 		if a.UpdateObj != nil {
 			a.Current = current
-			a.UpdateObj.UpdateAstar(a, color.RGBA{0xa0, 0xb0, 0xb0, 0xff}, 1)
+			a.UpdateObj.UpdateAstar(a, color.RGBA{0xa0, 0xb0, 0xb0, 0xff}, 0)
 		}
 
 		var nId int

@@ -1,15 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	astar "github.com/nkawa/astar_golang"
 )
+
+type ClickPoint struct {
+	X0 int
+	Y0 int
+	X1 int
+	Y1 int
+}
 
 type Field struct {
 	Area        []bool
@@ -21,19 +30,23 @@ type Field struct {
 }
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
+	screenWidth  = 1600
+	screenHeight = 1050
 )
 
 var started = false
 var InitChannel chan bool
+var clickState = false
+var clickPoint ClickPoint
+var ClickChan chan *ClickPoint
 
 func init() {
 	ebiten.SetWindowResizable(true)
-	//	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	//	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Astar Field")
 	InitChannel = make(chan bool)
+	ClickChan = make(chan *ClickPoint)
 }
 
 func pressedKey(str ebiten.Key) bool {
@@ -103,22 +116,28 @@ func (g *Field) SetPoint(x, y int, color int) {
 
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
+var lx, ly int
+
 func (g *Field) Draw(screen *ebiten.Image) {
-	if g.pixels == nil {
-		g.pixels = make([]byte, screenWidth*screenHeight*4)
-		//		log.Printf("Len %d", len(g.pixels))
-	}
 	if g.Objects == nil {
 		return
 	}
-	pix := g.pixels
-	for _, o := range g.Objects { // draw pix for each objects
-		x := o[0]
-		y := o[1]
-		idx := int((y*float64(screenWidth) + x)) * 4
-		for k := 0; k < 3; k++ {
-			pix[idx+k] = 0xff
+	var pix []byte
+	if g.pixels == nil {
+		g.pixels = make([]byte, screenWidth*screenHeight*4)
+		//		log.Printf("Len %d", len(g.pixels))
+		pix = g.pixels
+		for _, o := range g.Objects { // draw pix for each objects
+			x := o[0]
+			y := o[1]
+			idx := int((y*float64(screenWidth) + x)) * 4
+			for k := 0; k < 3; k++ {
+				pix[idx+k] = 0xff
+			}
+
 		}
+	} else {
+		pix = g.pixels
 	}
 	//	log.Printf("CObject len %d", len(g.CObjects))
 	for _, o := range g.CObjects { // draw pix for each objects
@@ -133,6 +152,30 @@ func (g *Field) Draw(screen *ebiten.Image) {
 	}
 	// need to fit size
 	screen.ReplacePixels(pix)
+	x, y := ebiten.CursorPosition()
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d , %t", x, y, clickState))
+	//	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		log.Printf("Click %d,%d,%t", x, y, clickState)
+		if lx != x || ly != y {
+			if clickState {
+				clickPoint.X1 = x
+				clickPoint.Y1 = y
+				ClickChan <- &clickPoint
+				clickState = false
+			} else {
+				// first Click
+				//  we should clear !
+				g.pixels = nil
+				g.CObjects = make([][3]int, 0)
+				clickState = true
+				clickPoint.X0 = x
+				clickPoint.Y0 = y
+			}
+		}
+		lx = x
+		ly = y
+	}
 }
 
 func (g *Field) Layout(outsideWidth, outsideHeight int) (int, int) {

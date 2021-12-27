@@ -29,7 +29,8 @@ func ObjectsFromImage(imgFile string, closeThreth, originX, originY, m2Pixel flo
 	for j := H - 1; j >= 0; j-- {
 		for i := 0; i < W; i++ {
 			x := originX + m2Pixel*float64(i)
-			y := originY + m2Pixel*float64(H-j-1)
+			//			y := originY + m2Pixel*float64(H-j-1)
+			y := originY + m2Pixel*float64(j)
 			oldPix := imData.At(i, j)
 			pixel := color.GrayModel.Convert(oldPix)
 			pixelU := color.GrayModel.Convert(pixel).(color.Gray).Y

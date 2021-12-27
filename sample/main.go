@@ -21,7 +21,7 @@ func SetRoute(field *Field, route [][2]float64) {
 	for i := range route {
 		p := route[len(route)-i-1] // reverse order
 		field.SetPoint(int(p[0]), int(p[1]), 0xff0000)
-		time.Sleep(time.Millisecond * 33)
+		time.Sleep(time.Millisecond * 3)
 	}
 
 }
@@ -45,13 +45,16 @@ func findRoute(field *Field, aStar *astar.Astar) {
 	time.Sleep(time.Second * 3) // wait 3 seconds
 	log.Println("findRoute: do route!")
 	if startOk {
-		route, err := aStar.Plan(10, 10, 120, 120) //from point(10,10) to point(120,120)
-		if err != nil {
-			fmt.Print(err, "\n")
-		} else {
-			fmt.Print("route length:", len(route), "\n")
+		for {
+			cp := <-ClickChan
+			route, err := aStar.Plan(float64(cp.X0), float64(cp.Y0), float64(cp.X1), float64(cp.Y1)) //from point(10,10) to point(120,120)
+			if err != nil {
+				fmt.Print(err, "\n")
+			} else {
+				fmt.Print("route length:", len(route), "\n")
+			}
+			SetRoute(field, route)
 		}
-		SetRoute(field, route)
 	}
 }
 
@@ -62,8 +65,8 @@ func main() {
 
 	myField := &Field{}
 
-	objects, err = astar.ObjectsFromImage("imgs/maiz.pgm", 100, 0, 0, 1)
-	//objects, err = astar.ObjectsFromImage("imgs/higashiyamaG.pgm", 100, 0, 0, 1)
+	//	objects, err = astar.ObjectsFromImage("imgs/maiz.pgm", 100, 0, 0, 1)
+	objects, err = astar.ObjectsFromImage("imgs/higashiyamaGhalf.pnm", 200, 0, 0, 1)
 	if err != nil || objects == nil {
 		log.Printf("Can't open map %v", err)
 	}
