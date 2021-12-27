@@ -3,6 +3,7 @@ package astar
 import (
 	"image"
 	"image/color"
+	"log"
 	"os"
 )
 
@@ -22,6 +23,7 @@ func ObjectsFromImage(imgFile string, closeThreth, originX, originY, m2Pixel flo
 	bound := imData.Bounds()
 	W := bound.Dx()
 	H := bound.Dy()
+	log.Printf("file loaded with %dx%d", W, H)
 
 	data := make([][2]float64, 0)
 	for j := H - 1; j >= 0; j-- {

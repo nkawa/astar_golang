@@ -2,9 +2,10 @@ package astar
 
 import (
 	"fmt"
+	"image/color"
 	"math"
 
-	"github.com/fukurin00/astar_golang/tool"
+	"github.com/nkawa/astar_golang/tool"
 )
 
 //Astar planning class
@@ -21,11 +22,20 @@ type Astar struct {
 	MaxIndex int
 
 	ObjMap [][]bool //if object, it is true
+
+	OpenSet   map[int]*AstarNode
+	CloseSet  map[int]*AstarNode
+	UpdateObj ModelUpdate
+	Current   *AstarNode
 }
 
 type Point struct {
 	X float64
 	Y float64
+}
+
+type ModelUpdate interface {
+	UpdateAstar(*Astar, color.RGBA, int) // add waittime
 }
 
 func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
@@ -52,6 +62,8 @@ func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
 	}
 
 	var ind int
+	// too slow greedy loop fukurin!
+
 	for iy := 0; iy < a.YWidth; iy++ {
 		y := indToPos(iy, a.MinY, resolution)
 		for ix := 1; ix < a.XWidth; ix++ {
@@ -66,6 +78,13 @@ func NewAstar(objects [][2]float64, objectRadius, resolution float64) *Astar {
 			}
 		}
 	}
+	/*
+		for _, o := range objects {
+			ix := indToPos(int(o[0]), a.MinX, resolution)
+			iy := indToPos(int(o[1]), a.MinY, resolution)
+			a.ObjMap[int(ix)][int(iy)] = true
+		}*/
+
 	a.MaxIndex = ind
 	return a
 }
@@ -113,7 +132,8 @@ func (a Astar) indToIndXY(index int) (int, int) {
 }
 
 func heuristic(n1, n2 *AstarNode) float64 {
-	w := 1.0
+	//	w := 1.0
+	w := 0.50
 	d := w * math.Hypot(float64(n1.Ix)-float64(n2.Ix), float64(n1.Iy)-float64(n2.Iy))
 	return d
 }
@@ -167,7 +187,14 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 
 	open_set := make(map[int]*AstarNode)
 	close_set := make(map[int]*AstarNode)
-	open_set[a.nodeToInd(nstart)] = nstart
+	open_set[a.nodeToInd(nstart)] = nstart // start open position.
+
+	a.OpenSet = open_set
+	a.CloseSet = close_set
+	if a.UpdateObj != nil {
+		a.Current = nstart
+		a.UpdateObj.UpdateAstar(a, color.RGBA{0xff, 0, 0, 0xff}, 5)
+	}
 
 	for {
 		if len(open_set) == 0 {
@@ -186,6 +213,10 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 		}
 		cId := minKey
 		current := open_set[cId]
+		if a.UpdateObj != nil {
+			a.Current = current
+			a.UpdateObj.UpdateAstar(a, color.RGBA{0xff, 0, 0, 0xff}, 0)
+		}
 
 		if current.Ix == ngoal.Ix && current.Iy == ngoal.Iy {
 			//log.Print("find goal")
@@ -198,6 +229,10 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 		delete(open_set, cId)
 
 		close_set[cId] = current
+		if a.UpdateObj != nil {
+			a.Current = current
+			a.UpdateObj.UpdateAstar(a, color.RGBA{0xa0, 0xb0, 0xb0, 0xff}, 1)
+		}
 
 		var nId int
 		var node *AstarNode
@@ -210,11 +245,18 @@ func (a *Astar) Plan(sx, sy, gx, gy float64) (route [][2]float64, err error) {
 				continue
 			}
 
+			// in the closed set?
 			if _, ok := close_set[nId]; ok {
 				continue
 			}
 
+			// in the open set?
 			if _, ok := open_set[nId]; !ok {
+				// add new open set
+				if a.UpdateObj != nil {
+					a.Current = node
+					a.UpdateObj.UpdateAstar(a, color.RGBA{0x00, 0xb0, 0x0b0, 0xff}, 0)
+				}
 				open_set[nId] = node
 			}
 		}
