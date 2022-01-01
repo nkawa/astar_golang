@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -10,6 +14,34 @@ import (
 
 	astar "github.com/nkawa/astar_golang"
 )
+
+type Feature struct {
+	MinLon, MinLat, MaxLon, MaxLat float64
+	DLon, DLat                     float64
+	Count                          int
+	Scale                          float64
+	PGMFile                        string
+	PGMWidth, PGMHeight            int
+	//	GeoJsonFC                      *geojson.FeatureCollection `json:"-"`
+}
+
+var (
+	jsonfile = flag.String("file", "higashi.json", "Feature Json File")
+	feature  *Feature
+)
+
+func loadFeature(fname string) *Feature {
+	f := &Feature{}
+	fp, err := os.Open(fname)
+	if err != nil {
+		log.Fatal("Can't open Feature file %s", fname)
+	}
+	defer fp.Close()
+	buf, _ := ioutil.ReadAll(fp)
+
+	json.Unmarshal(buf, f)
+	return f
+}
 
 func SetRoute(field *Field, route [][2]float64) {
 
@@ -59,14 +91,18 @@ func findRoute(field *Field, aStar *astar.Astar) {
 }
 
 func main() {
+	flag.Parse()
 	var objects [][2]float64
 	var err error
 	var wg sync.WaitGroup
 
 	myField := &Field{}
 
+	feature = loadFeature(*jsonfile)
+
 	//	objects, err = astar.ObjectsFromImage("imgs/maiz.pgm", 100, 0, 0, 1)
-	objects, err = astar.ObjectsFromImage("imgs/higashiyamaGhalf.pnm", 200, 0, 0, 1)
+	//	objects, err = astar.ObjectsFromImage("imgs/higashiyamaGhalf.pnm", 200, 0, 0, 1)
+	objects, err = astar.ObjectsFromImage(feature.PGMFile, 200, 0, 0, 1)
 	if err != nil || objects == nil {
 		log.Printf("Can't open map %v", err)
 	}
